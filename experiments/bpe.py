@@ -84,11 +84,7 @@ class BPE:
 
 
 if __name__ == "__main__":
-    ds = [
-        "hi there my name is donnydonny",
-        "hi there my name is donnydonny",
-        "hi there my name is donnydonny",
-    ]
+    ds = ["hi there my name is donnydonny", *100] * 2_000
     bpe = BPE(ds, init_vocab=list("abcdefghijklmnopqrstuvqxyz"), n_vocab=32)
     rules = bpe.train()
     print(list(bpe.encode(ds[0], rules)))
