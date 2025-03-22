@@ -1,4 +1,5 @@
 from time import time
+from tqdm import tqdm
 from collections import Counter
 
 
@@ -65,7 +66,7 @@ class BPE:
             return  # don't need to do any training, already have all the n_vocab we need
 
         merge_rules = []
-        for i in range(iters):
+        for i in tqdm(range(iters)):
             c = Counter()
             # for all strings, count the most frequent pair of characters
             for s in self.data:
