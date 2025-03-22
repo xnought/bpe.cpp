@@ -203,8 +203,22 @@ void bpe_example()
 	print_vocab(v);
 }
 
+void bpe_larger_example()
+{
+#define LARGE 1000
+	string s[LARGE];
+	string example = "hi there my name is donnydonny akjshd kjashdkjashdkjahd ahdkj ashdahd kahdahdkahdkada kasdkahd";
+	size_t n_iter = 2000;
+	for (size_t i = 0; i < LARGE; i++)
+	{
+		s[i] = example;
+	}
+	vector<string> v = train_bpe(s, LARGE, n_iter);
+}
+
 int main()
 {
 	// experiments();
-	bpe_example();
+	// bpe_example();
+	bpe_larger_example();
 }
