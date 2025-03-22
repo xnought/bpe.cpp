@@ -6,12 +6,36 @@ using namespace std;
 
 #define uint unsigned int
 
+/**
+ * Does the string in a (offset with a_offset) start with the string in b?
+ */
+bool starts_with(uint a_offset, string &a, string &b)
+{
+	size_t asize = a.size() - a_offset;
+	size_t bsize = b.size();
+
+	if (bsize > asize)
+	{
+		return false;
+	}
+	else
+	{
+		for (size_t i = 0; i < bsize; i++)
+		{
+			if (a[i + a_offset] != b[i])
+				return false;
+		}
+		return true;
+	}
+}
+
 uint find_slice_match(uint i, string &s, vector<string> &new_vocab)
 {
 	for (uint j = 0; j < new_vocab.size(); j++)
 	{
 		string v = new_vocab[j];
-		if ((i + v.size()) < s.size() && v == s.substr(i, v.size()))
+		bool fits = (i + v.size()) < s.size();
+		if (fits && starts_with(i, s, v))
 		{
 			return v.size();
 		}
@@ -42,6 +66,6 @@ int main()
 
 	for (uint i = 0, j = 1; i < idxs.size() - 1; i++, j++)
 	{
-		printf("%s ", s[0].substr(idxs[i], idxs[j]).c_str());
+		printf("%s\n", s[0].substr(idxs[i], idxs[j]).c_str());
 	}
 }
