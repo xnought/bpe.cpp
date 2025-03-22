@@ -74,8 +74,11 @@ class BPE:
                     str1 = s[s1[0] : s1[1]]
                     str2 = s[s2[0] : s2[1]]
                     c[str1 + str2] += 1
+            if len(c) == 0:
+                return merge_rules
             most_freq, _ = c.most_common(1)[0]
-            merge_rules.insert(0, (most_freq, len(most_freq)))
+            merge_rules.append((most_freq, len(most_freq)))
+            merge_rules.sort(key=lambda x: x[1], reverse=True)
         return merge_rules
 
     def encode(self, x: str, rules: list[str]):
@@ -84,7 +87,8 @@ class BPE:
 
 
 if __name__ == "__main__":
-    ds = ["hi there my name is donnydonny", *100] * 2_000
+    ds = ["hi there my name is donnydonny akjshd kjashdkjashdkjahd ahdkj ashdahd kahdahdkahdkada kasdkahd"] * 100
     bpe = BPE(ds, init_vocab=list("abcdefghijklmnopqrstuvqxyz"), n_vocab=32)
-    rules = bpe.train()
+    with Time():
+        rules = bpe.train()
     print(list(bpe.encode(ds[0], rules)))
