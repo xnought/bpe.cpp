@@ -80,6 +80,15 @@ bool map_has(unordered_map<K, V> &m, K &check)
 	return m.find(check) != m.end();
 }
 
+template <typename K>
+void increment_frequency(unordered_map<K, size_t> &m, K &key)
+{
+	if (!map_has(m, key))
+		m[key] = 1;
+	else
+		m[key]++;
+}
+
 int main()
 {
 	string s[1] = {"hi there my name is donny"};
@@ -97,6 +106,13 @@ int main()
 
 	unordered_map<string, size_t> map;
 	map[a] = 20;
+	if (map_has(map, a))
+	{
+		printf("%lu\n", map[a]);
+	}
+
+	increment_frequency(map, a);
+
 	if (map_has(map, a))
 	{
 		printf("%lu\n", map[a]);
