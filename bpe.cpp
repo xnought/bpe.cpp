@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -73,6 +74,12 @@ void insert_sorted_str_size(vector<string> &v, string &s)
 	}
 }
 
+template <typename K, typename V>
+bool map_has(unordered_map<K, V> &m, K &check)
+{
+	return m.find(check) != m.end();
+}
+
 int main()
 {
 	string s[1] = {"hi there my name is donny"};
@@ -86,5 +93,12 @@ int main()
 	{
 		printf("(%zu, %zu) ", idxs[i], idxs[i + 1]);
 		printf("%s\n", substr_between(s[0], idxs[i], idxs[i + 1]).c_str());
+	}
+
+	unordered_map<string, size_t> map;
+	map[a] = 20;
+	if (map_has(map, a))
+	{
+		printf("%lu\n", map[a]);
 	}
 }
