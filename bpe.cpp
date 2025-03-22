@@ -4,12 +4,10 @@
 
 using namespace std;
 
-#define uint unsigned int
-
 /**
  * Does the string in a (offset with a_offset) start with the string in b?
  */
-bool starts_with(uint a_offset, string &a, string &b)
+bool starts_with(size_t a_offset, string &a, string &b)
 {
 	size_t asize = a.size() - a_offset;
 	size_t bsize = b.size();
@@ -29,9 +27,9 @@ bool starts_with(uint a_offset, string &a, string &b)
 	}
 }
 
-uint find_slice_match(uint i, string &s, vector<string> &new_vocab)
+size_t find_slice_match(size_t i, string &s, vector<string> &new_vocab)
 {
-	for (uint j = 0; j < new_vocab.size(); j++)
+	for (size_t j = 0; j < new_vocab.size(); j++)
 	{
 		string v = new_vocab[j];
 		bool fits = (i + v.size()) < s.size();
@@ -43,29 +41,36 @@ uint find_slice_match(uint i, string &s, vector<string> &new_vocab)
 	return 1;
 }
 
-vector<uint> token_idxs(string &s, vector<string> &new_vocab)
+vector<size_t> token_idxs(string &s, vector<string> &new_vocab)
 {
-	vector<uint> token_idxs = {0};
+	vector<size_t> token_idxs = {};
 
-	uint i = 0;
+	size_t i = 0;
 	while (i < s.size())
 	{
-		uint slice_len = find_slice_match(i, s, new_vocab);
+		size_t slice_len = find_slice_match(i, s, new_vocab);
 		token_idxs.push_back(i + slice_len);
 		i += slice_len;
 	}
-
 	return token_idxs;
+}
+
+string substr_between(string &s, size_t a, size_t b)
+{
+	return s.substr(a, b - a);
 }
 
 int main()
 {
-	string s[2] = {"hello", "world"};
-	vector<string> vocab = {"hell", "he"};
-	vector<uint> idxs = token_idxs(s[0], vocab);
+	string s[1] = {"hi there my name is donny"};
+	vector<string> vocab = {"hi t", "hi ", "hi", "do"};
+	vector<size_t> idxs = token_idxs(s[0], vocab);
 
-	for (uint i = 0, j = 1; i < idxs.size() - 1; i++, j++)
+	size_t prev = 0;
+	for (size_t i = 0; i < idxs.size(); i++)
 	{
-		printf("%s\n", s[0].substr(idxs[i], idxs[j]).c_str());
+		printf("(%zu, %zu) ", prev, idxs[i]);
+		printf("%s\n", substr_between(s[0], prev, idxs[i]).c_str());
+		prev = idxs[i];
 	}
 }
