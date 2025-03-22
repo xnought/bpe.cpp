@@ -1,4 +1,4 @@
-# lightning-bpe
+# `bpe.cpp`
 
 Fast BPE training
 
