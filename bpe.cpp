@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -231,9 +233,77 @@ void bpe_larger_example()
 	vector<string> v = train_bpe(s, N_STRINGS, N_ITER);
 }
 
+size_t num_lines(ifstream &f)
+{
+	string line;
+	size_t count = 0;
+	while (getline(f, line))
+		count++;
+	f.clear();
+	f.seekg(0);
+	return count;
+}
+
+/**
+ * Reads in the file into array of strings
+ * returns NULL if fails, returns string * that needs to be freed otherwise with delete[]
+ */
+string *parse_file(string filename, size_t &lines)
+{
+	ifstream f;
+	f.open(filename);
+	if (!f.is_open())
+		return NULL;
+
+	lines = num_lines(f);
+
+	string *parsed = new string[lines];
+	string line;
+	size_t i = 0;
+	while (getline(f, line))
+	{
+		parsed[i] = line;
+		i++;
+	}
+
+	f.close();
+	return parsed;
+}
+
+void write_vocab(string filename, vector<string> &vocab)
+{
+	ofstream f;
+	f.open(filename);
+
+	if (!f.is_open())
+		return;
+
+	for (size_t i = 0; i < vocab.size(); i++)
+	{
+		f << vocab[i] << "\n";
+	}
+
+	f.close();
+}
+
+void bpe_file_example()
+{
+	size_t data_len;
+	string *data = parse_file("data.txt", data_len);
+	if (data == NULL)
+		return;
+
+	vector<string> res = train_bpe(data, data_len, 10);
+
+	write_vocab("data_vocab.txt", res);
+
+	delete[] data;
+}
+
 int main()
 {
 	// experiments();
 	// bpe_example();
-	bpe_larger_example();
+	// bpe_larger_example();
+	bpe_file_example();
 }
