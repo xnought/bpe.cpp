@@ -33,7 +33,7 @@ size_t find_slice_match(size_t i, string &s, vector<string> &new_vocab)
 	for (int j = new_vocab.size() - 1; j >= 0; j--)
 	{
 		string v = new_vocab[j];
-		bool fits = (i + v.size()) < s.size();
+		bool fits = (i + v.size()) <= s.size();
 		if (fits && starts_with(i, s, v))
 		{
 			return v.size();
@@ -63,6 +63,12 @@ string substr_between(string &s, size_t a, size_t b)
 
 void insert_sorted_str_size(vector<string> &v, string &s)
 {
+	if (v.size() == 0)
+	{
+		v.push_back(s);
+		return;
+	}
+
 	for (int i = v.size() - 1; i >= 0; i--)
 	{
 		string item = v[i];
@@ -89,7 +95,7 @@ void increment_frequency(unordered_map<K, size_t> &m, K &key)
 		m[key]++;
 }
 
-int main()
+void experiments()
 {
 	string s[1] = {"hi there my name is donny"};
 	vector<string> vocab = {"do", "hi", "hi ", "hi t"};
@@ -117,4 +123,88 @@ int main()
 	{
 		printf("%lu\n", map[a]);
 	}
+}
+
+void print_vocab(vector<string> &v)
+{
+	for (int i = 0; i < v.size(); i++)
+	{
+		printf("'%s'\n", v[i].c_str());
+	}
+}
+
+void print_counter(unordered_map<string, size_t> &counter)
+{
+	for (auto const &[key, val] : counter)
+	{
+		printf("'%s' %zu\n", key.c_str(), val);
+	}
+}
+
+string find_most_frequent(unordered_map<string, size_t> &counter)
+{
+	size_t max_val = counter.begin()->second;
+	string max_str = counter.begin()->first;
+
+	for (auto const &[key, val] : counter)
+	{
+		if (val > max_val)
+		{
+			max_val = val;
+			max_str = key;
+		}
+	}
+
+	return max_str;
+}
+
+vector<string> train_bpe(string strings[], size_t n_strings, size_t n_iter)
+{
+	vector<string> vocab;
+	vocab.reserve(n_iter);
+
+	// outer training loop
+	for (size_t i = 0; i < n_iter; i++)
+	{
+		// count the frequencies of byte pairs for each string
+		unordered_map<string, size_t> counter;
+		for (size_t j = 0; j < n_strings; j++)
+		{
+			string s = strings[j];
+			// iterate over the string given the vocab merges
+			vector<size_t> idxs = token_idxs(s, vocab);
+			for (size_t k = 0; k < idxs.size() - 2; k++)
+			{
+				// TODO: figure out how to not copy strings so many times here
+				string tok1 = substr_between(s, idxs[k], idxs[k + 1]);
+				string tok2 = substr_between(s, idxs[k + 1], idxs[k + 2]);
+				string pair = tok1 + tok2;
+				increment_frequency(counter, pair);
+			}
+		}
+
+		// if there is nothing to count, we are done done done
+		if (counter.size() == 0)
+			return vocab;
+
+		// add most frequent pair to the merge rules/vocab
+		string most_freq = find_most_frequent(counter);
+		insert_sorted_str_size(vocab, most_freq);
+	}
+
+	return vocab;
+}
+
+void bpe_example()
+{
+	string s[1] = {"hi there my name is donny"};
+	size_t n_iter = 4;
+	vector<string> v = train_bpe(s, 1, n_iter);
+	print_vocab(v);
+}
+
+int main()
+{
+	// experiments();
+	bpe_example();
 }
