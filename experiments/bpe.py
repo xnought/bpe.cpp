@@ -1,4 +1,5 @@
 from time import time
+from collections import Counter
 
 
 def preprocess_merge_rules(merge_rules: list[tuple[tuple[str, str], str]]) -> list[tuple[str, int]]:
@@ -48,15 +49,46 @@ class Time:
         print(f"{round(t, self.round)}{self.type}")
 
 
+class BPE:
+    def __init__(self, data: list[str], init_vocab: list[str], n_vocab=20):
+        assert len(data) > 0, "data needs data! duh"
+        assert n_vocab > 0, "n_vocab must be greater than 0"
+        assert len(init_vocab) > 0, "init_vocab must be populated"
+
+        self.data = data
+        self.init_vocab = init_vocab
+        self.n_vocab = n_vocab
+
+    def train(self):
+        iters = self.n_vocab - len(self.init_vocab)
+        if iters <= 0:
+            return  # don't need to do any training, already have all the n_vocab we need
+
+        merge_rules = []
+        for i in range(iters):
+            c = Counter()
+            # for all strings, count the most frequent pair of characters
+            for s in self.data:
+                token_slices = list(iter_tokens_faster(s, merge_rules))
+                for s1, s2 in zip(token_slices, token_slices[1:]):
+                    str1 = s[s1[0] : s1[1]]
+                    str2 = s[s2[0] : s2[1]]
+                    c[str1 + str2] += 1
+            most_freq, _ = c.most_common(1)[0]
+            merge_rules.insert(0, (most_freq, len(most_freq)))
+        return merge_rules
+
+    def encode(self, x: str, rules: list[str]):
+        for i, j in iter_tokens_faster(x, rules):
+            yield x[i:j]
+
+
 if __name__ == "__main__":
-    example = "Hi there my name is donny!" * 100_000
-    merges = [
-        (("H", "i"), "Hi"),
-        (("Hi", " "), "Hi "),
-        (("Hi ", "t"), "Hi t"),
-        (("d ", "o"), "do"),
+    ds = [
+        "hi there my name is donnydonny",
+        "hi there my name is donnydonny",
+        "hi there my name is donnydonny",
     ]
-    sorted_merge_rules = preprocess_merge_rules(merges)
-    with Time("ms"):
-        for i, j in iter_tokens_faster(example, sorted_merge_rules):
-            pass
+    bpe = BPE(ds, init_vocab=list("abcdefghijklmnopqrstuvqxyz"), n_vocab=32)
+    rules = bpe.train()
+    print(list(bpe.encode(ds[0], rules)))
