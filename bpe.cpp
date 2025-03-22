@@ -43,14 +43,14 @@ size_t find_slice_match(size_t i, string &s, vector<string> &new_vocab)
 
 vector<size_t> token_idxs(string &s, vector<string> &new_vocab)
 {
-	vector<size_t> token_idxs = {};
+	vector<size_t> token_idxs = {0};
 
 	size_t i = 0;
 	while (i < s.size())
 	{
 		size_t slice_len = find_slice_match(i, s, new_vocab);
-		token_idxs.push_back(i + slice_len);
 		i += slice_len;
+		token_idxs.push_back(i);
 	}
 	return token_idxs;
 }
@@ -66,11 +66,9 @@ int main()
 	vector<string> vocab = {"hi t", "hi ", "hi", "do"};
 	vector<size_t> idxs = token_idxs(s[0], vocab);
 
-	size_t prev = 0;
-	for (size_t i = 0; i < idxs.size(); i++)
+	for (size_t i = 0; i < idxs.size() - 1; i++)
 	{
-		printf("(%zu, %zu) ", prev, idxs[i]);
-		printf("%s\n", substr_between(s[0], prev, idxs[i]).c_str());
-		prev = idxs[i];
+		printf("(%zu, %zu) ", idxs[i], idxs[i + 1]);
+		printf("%s\n", substr_between(s[0], idxs[i], idxs[i + 1]).c_str());
 	}
 }
