@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cstdlib>
 
 using namespace std;
 
@@ -203,17 +204,31 @@ void bpe_example()
 	print_vocab(v);
 }
 
+string gen_random_string(size_t len)
+{
+	string s;
+	s.reserve(len);
+	for (size_t i = 0; i < len; i++)
+	{
+		char rand_char = 'a' + (rand() % 26);
+		s.push_back(rand_char);
+	}
+	return s;
+}
+
+#define N_STRINGS 100
+#define STR_LEN 256
+#define N_ITER 2048
 void bpe_larger_example()
 {
-#define LARGE 1000
-	string s[LARGE];
-	string example = "hi there my name is donnydonny akjshd kjashdkjashdkjahd ahdkj ashdahd kahdahdkahdkada kasdkahd";
-	size_t n_iter = 2000;
-	for (size_t i = 0; i < LARGE; i++)
+	// Generate N_STRINGS with random letters of length STR_LEN each
+	string s[N_STRINGS];
+	srand(0);
+	for (size_t i = 0; i < N_STRINGS; i++)
 	{
-		s[i] = example;
+		s[i] = gen_random_string(STR_LEN);
 	}
-	vector<string> v = train_bpe(s, LARGE, n_iter);
+	vector<string> v = train_bpe(s, N_STRINGS, N_ITER);
 }
 
 int main()
