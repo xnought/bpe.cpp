@@ -9,4 +9,4 @@ Fast BPE training
 - [x] Replicate the python example and time
 - [x] Optimize single threaded
 - [ ] Multi-thread
-- [ ] Read from file and output result to file
+- [x] Read from file and output result to file
