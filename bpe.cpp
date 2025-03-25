@@ -5,8 +5,25 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <omp.h>
 
 using namespace std;
+
+template <typename K, typename V>
+void merge_maps(unordered_map<K, V> &dst, unordered_map<K, V> &src)
+{
+	for (auto const &[key, val] : src)
+	{
+		if (dst.find(key) != dst.end())
+		{
+			dst[key] += src[key];
+		}
+		else
+		{
+			dst[key] = src[key];
+		}
+	}
+}
 
 /**
  * Does the string in a (offset with a_offset) start with the string in b?
@@ -161,6 +178,67 @@ string find_most_frequent(unordered_map<string, size_t> &counter)
 	return max_str;
 }
 
+vector<string> train_bpe_parallel(string strings[], size_t n_strings, size_t n_iter)
+{
+	vector<string> vocab;
+	vocab.reserve(n_iter);
+
+	int total_threads = omp_get_num_procs();
+	printf("Total number of threads: %d\n", total_threads);
+	int data_per_thread = (int)ceil((float)n_strings / (float)total_threads);
+	printf("Data (n_strings) processing per thread %d\n", data_per_thread);
+
+	omp_lock_t writelock;
+	omp_init_lock(&writelock);
+
+	// outer training loop
+	for (size_t i = 0; i < n_iter; i++)
+	{
+		unordered_map<string, size_t> global_counter;
+#pragma omp parallel
+		{
+
+			int gi = omp_get_thread_num();
+			// count the frequencies of byte pairs for each string
+			unordered_map<string, size_t> counter;
+			for (size_t j = 0; j < data_per_thread; j++)
+			{
+				size_t gj = gi * data_per_thread + j;
+				if (gj < n_strings)
+				{
+					string s = strings[gj];
+					// iterate over the string given the vocab merges
+					vector<size_t> idxs = token_idxs(s, vocab);
+					for (size_t k = 0; k < idxs.size() - 2; k++)
+					{
+						// TODO: figure out how to not copy strings so many times here
+						string tok1 = substr_between(s, idxs[k], idxs[k + 1]);
+						string tok2 = substr_between(s, idxs[k + 1], idxs[k + 2]);
+						string pair = tok1 + tok2;
+						increment_frequency(counter, pair);
+					}
+				}
+			}
+
+			omp_set_lock(&writelock);
+			merge_maps(global_counter, counter);
+			omp_unset_lock(&writelock);
+		}
+
+		// if there is nothing to count, we are done done done
+		if (global_counter.size() == 0)
+			goto done;
+
+		// add most frequent pair to the merge rules/vocab
+		string most_freq = find_most_frequent(global_counter);
+		insert_sorted_str_size(vocab, most_freq);
+	}
+
+done:
+	omp_destroy_lock(&writelock);
+	return vocab;
+}
+
 vector<string> train_bpe(string strings[], size_t n_strings, size_t n_iter)
 {
 	vector<string> vocab;
@@ -203,7 +281,6 @@ void bpe_example()
 	string s[1] = {"hi there my name is donny"};
 	size_t n_iter = 4;
 	vector<string> v = train_bpe(s, 1, n_iter);
-	print_vocab(v);
 }
 
 string gen_random_string(size_t len)
@@ -218,9 +295,9 @@ string gen_random_string(size_t len)
 	return s;
 }
 
-#define N_STRINGS 100
+#define N_STRINGS 300000
 #define STR_LEN 256
-#define N_ITER 2048
+#define N_ITER 10
 void bpe_larger_example()
 {
 	// Generate N_STRINGS with random letters of length STR_LEN each
@@ -231,6 +308,17 @@ void bpe_larger_example()
 		s[i] = gen_random_string(STR_LEN);
 	}
 	vector<string> v = train_bpe(s, N_STRINGS, N_ITER);
+}
+void bpe_larger_example_parallel()
+{
+	// Generate N_STRINGS with random letters of length STR_LEN each
+	string s[N_STRINGS];
+	srand(0);
+	for (size_t i = 0; i < N_STRINGS; i++)
+	{
+		s[i] = gen_random_string(STR_LEN);
+	}
+	vector<string> v = train_bpe_parallel(s, N_STRINGS, N_ITER);
 }
 
 size_t num_lines(ifstream &f)
@@ -305,5 +393,6 @@ int main()
 	// experiments();
 	// bpe_example();
 	// bpe_larger_example();
-	bpe_file_example();
+	bpe_larger_example_parallel();
+	// bpe_file_example();
 }
