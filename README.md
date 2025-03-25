@@ -10,3 +10,4 @@ Fast BPE training
 - [x] Optimize single threaded
 - [x] Multi-thread
 - [x] Read from file and output result to file
+- [ ] Keep a global counter where when we find a new item, we don't need to recount everything. Just a count once.

@@ -194,6 +194,7 @@ vector<string> train_bpe_parallel(string strings[], size_t n_strings, size_t n_i
 	// outer training loop
 	for (size_t i = 0; i < n_iter; i++)
 	{
+		printf("%zu/%zu\n", i, n_iter);
 		unordered_map<string, size_t> global_counter;
 #pragma omp parallel
 		{
@@ -388,11 +389,30 @@ void bpe_file_example()
 	delete[] data;
 }
 
+void bpe_titles()
+{
+	size_t data_len;
+	string *data = parse_file("experiments/titles.txt", data_len);
+	if (data == NULL)
+		return;
+
+	printf("Loaded %zu rows of strings\n", data_len);
+
+	printf("Training BPE\n");
+	vector<string> res = train_bpe_parallel(data, data_len, 16);
+
+	printf("Saving result\n");
+	write_vocab("experiments/titles_vocab.txt", res);
+
+	delete[] data;
+}
+
 int main()
 {
 	// experiments();
 	// bpe_example();
 	// bpe_larger_example();
-	bpe_larger_example_parallel();
+	// bpe_larger_example_parallel();
 	// bpe_file_example();
+	bpe_titles();
 }
